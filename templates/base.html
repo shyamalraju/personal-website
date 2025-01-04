@@ -9,15 +9,24 @@
 <body class="bg-gray-900 text-white">
     <nav class="bg-gray-800 shadow-lg">
         <div class="max-w-6xl mx-auto px-4">
-            <div class="flex justify-between">
-                <div class="flex space-x-7">
-                    <div>
-                        <a href="/" class="flex items-center py-4">
-                            <span class="font-bold text-gray-200 text-2xl">Shyamal Raju</span>
-                        </a>
-                    </div>
+            <div class="flex justify-between items-center">
+                <div>
+                    <a href="/" class="flex items-center py-4">
+                        <span class="font-bold text-gray-200 text-xl md:text-2xl">Shyamal Raju</span>
+                    </a>
                 </div>
-                <div class="flex items-center space-x-3">
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button type="button" class="mobile-menu-button text-gray-300 hover:text-white focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Desktop menu -->
+                <div class="hidden md:flex items-center space-x-3">
                     <a href="{{ url_for('index') }}" class="py-4 px-2 text-gray-300 hover:text-white">Home</a>
                     <a href="{{ url_for('about') }}" class="py-4 px-2 text-gray-300 hover:text-white">About</a>
                     <a href="{{ url_for('projects') }}" class="py-4 px-2 text-gray-300 hover:text-white">Projects</a>
@@ -25,6 +34,15 @@
                     <a href="{{ url_for('index') }}#contact" class="py-4 px-2 text-gray-300 hover:text-white">Contact</a>
                 </div>
             </div>
+        </div>
+
+        <!-- Mobile menu -->
+        <div class="mobile-menu hidden md:hidden">
+            <a href="{{ url_for('index') }}" class="block py-2 px-4 text-sm text-gray-300 hover:text-white">Home</a>
+            <a href="{{ url_for('about') }}" class="block py-2 px-4 text-sm text-gray-300 hover:text-white">About</a>
+            <a href="{{ url_for('projects') }}" class="block py-2 px-4 text-sm text-gray-300 hover:text-white">Projects</a>
+            <a href="{{ url_for('blog') }}" class="block py-2 px-4 text-sm text-gray-300 hover:text-white">Blog</a>
+            <a href="{{ url_for('index') }}#contact" class="block py-2 px-4 text-sm text-gray-300 hover:text-white">Contact</a>
         </div>
     </nav>
 
@@ -37,5 +55,15 @@
             © {% block year %}2024{% endblock %} Shyamal Raju. All rights reserved.
         </div>
     </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuButton = document.querySelector('.mobile-menu-button');
+        const mobileMenu = document.querySelector('.mobile-menu');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+    </script>
 </body>
 </html> 
