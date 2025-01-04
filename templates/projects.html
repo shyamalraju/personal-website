@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="py-12">
+    <h1 class="text-4xl font-bold text-white mb-8 text-center">My Projects</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        {% for project in projects %}
+        <div class="bg-gray-800 rounded-lg shadow-md overflow-hidden">
+            <div class="p-6">
+                <h3 class="text-xl font-bold text-white mb-2">{{ project.title }}</h3>
+                <p class="text-gray-300 mb-4">{{ project.description }}</p>
+                <div class="flex flex-wrap gap-2">
+                    {% for tech in project.tech_stack %}
+                    <span class="px-2 py-1 bg-gray-700 rounded-full text-sm text-gray-300">
+                        {{ tech }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 
