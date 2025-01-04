@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify
+from markupsafe import escape
 import os
 from werkzeug.utils import secure_filename
 import plotly
@@ -166,5 +167,5 @@ def blog():
     return render_template('blog.html', posts=posts)
 
 if __name__ == '__main__':
-    # For local development only
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000))) 
+    # Try a different port (5001)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5001)))
