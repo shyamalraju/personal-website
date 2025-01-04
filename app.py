@@ -1,78 +1,67 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from markupsafe import escape
 import os
 from werkzeug.utils import secure_filename
 import plotly
 import plotly.graph_objs as go
 import json
-import base64
-import re
-from datetime import datetime
+from functools import wraps
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default-dev-key')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
 app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'static/images')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['ADMIN_PIN'] = os.environ.get('ADMIN_PIN', '1234')  # Change this in production
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('is_admin'):
+            return redirect(url_for('admin_login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/admin-login', methods=['GET', 'POST'])
+def admin_login():
+    # Debug print
+    print("Admin login attempt - Current session:", session)
+    
+    if request.method == 'POST':
+        pin = request.form.get('pin')
+        if pin == app.config['ADMIN_PIN']:
+            session['is_admin'] = True
+            print("Admin login successful")
+            return redirect(url_for('upload_profile'))
+        print("Admin login failed")
+        return render_template('admin_login.html', error=True)
+    return render_template('admin_login.html', error=False)
+
 @app.route('/upload-profile', methods=['GET', 'POST'])
+@admin_required
 def upload_profile():
     if request.method == 'GET':
         return render_template('upload_profile.html')
     
     if request.method == 'POST':
         if 'file' not in request.files:
-            return jsonify({'error': 'No file part'}), 400
+            return redirect(request.url)
         
         file = request.files['file']
         if file.filename == '':
-            return jsonify({'error': 'No selected file'}), 400
+            return redirect(request.url)
             
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
-            return jsonify({'success': True, 'filename': filename})
-
-@app.route('/save-crop', methods=['POST'])
-def save_crop():
-    try:
-        data = request.json
-        image_data = data['imageData']
-        
-        # Extract the base64 data after the comma
-        image_data = re.sub('^data:image/.+;base64,', '', image_data)
-        
-        # Decode base64 string to bytes
-        image_bytes = base64.b64decode(image_data)
-        
-        # Generate unique filename using timestamp
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f'profile_{timestamp}.jpg'
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        
-        # Add debug logging
-        print(f"Saving image to: {filepath}")
-        
-        # Save the image
-        with open(filepath, 'wb') as f:
-            f.write(image_bytes)
+            return redirect(url_for('index'))
             
-        return jsonify({
-            'success': True,
-            'filename': filename
-        })
-        
-    except Exception as e:
-        print(f"Error in save_crop: {str(e)}")  # Add debug logging
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 400
+    return redirect(request.url)
 
 def create_pie_chart():
     # Sample data for the pie chart
@@ -98,6 +87,11 @@ def create_pie_chart():
         margin=dict(t=0, b=0, l=0, r=0),
         showlegend=True,
         legend=dict(
+            orientation="h",  # horizontal orientation
+            yanchor="bottom",
+            y=-0.2,  # position below the chart
+            xanchor="center",
+            x=0.5,  # centered
             font=dict(color='#ffffff'),
             bgcolor='rgba(0,0,0,0)'
         )
@@ -108,6 +102,10 @@ def create_pie_chart():
 
 @app.route('/')
 def index():
+    # Debug print
+    print("Current session:", session)
+    print("Is admin?", session.get('is_admin'))
+    
     # Get the pie chart JSON
     pie_chart = create_pie_chart()
     return render_template('index.html', pie_chart=pie_chart)
@@ -165,6 +163,13 @@ def blog():
         }
     ]
     return render_template('blog.html', posts=posts)
+
+@app.route('/admin-logout')
+def admin_logout():
+    # Clear the entire session instead of just popping one key
+    session.clear()
+    print("Admin logged out - Session cleared")
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     # Try a different port (5001)
