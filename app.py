@@ -9,7 +9,8 @@ import re
 from datetime import datetime
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'static/images'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default-dev-key')
+app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'static/images')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -165,5 +166,5 @@ def blog():
     return render_template('blog.html', posts=posts)
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port) 
+    # For local development only
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000))) 
